@@ -2,6 +2,7 @@
 
 import { useSession, signIn, signOut } from "next-auth/react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Header() {
   const { data: session, status } = useSession();
@@ -9,26 +10,31 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
       <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">
+        <Link href="/" className="text-xl font-bold text-gray-900 hover:text-gray-700 transition-colors">
           NSpoiler
-        </h1>
+        </Link>
 
         <div className="flex items-center gap-3">
           {status === "loading" ? (
             <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
           ) : session ? (
             <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600 hidden sm:block">
-                {session.user?.name}
-              </span>
+              <Link
+                href="/mypage"
+                className="text-sm text-gray-600 hover:text-gray-800 hidden sm:block"
+              >
+                マイページ
+              </Link>
               {session.user?.image && (
-                <Image
-                  src={session.user.image}
-                  alt="プロフィール"
-                  width={32}
-                  height={32}
-                  className="rounded-full"
-                />
+                <Link href="/mypage">
+                  <Image
+                    src={session.user.image}
+                    alt="プロフィール"
+                    width={32}
+                    height={32}
+                    className="rounded-full hover:ring-2 hover:ring-blue-500 transition-all"
+                  />
+                </Link>
               )}
               <button
                 onClick={() => signOut()}
