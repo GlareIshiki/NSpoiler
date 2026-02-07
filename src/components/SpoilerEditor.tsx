@@ -14,6 +14,7 @@ const themeOptions: { value: SpoilerTheme; label: string; description: string }[
   { value: "glitch", label: "グリッチ", description: "ノイズ風エフェクト" },
   { value: "mosaic", label: "モザイク", description: "ぼかし効果" },
   { value: "flame", label: "フレイム", description: "炎のような演出" },
+  { value: "editorial", label: "編集工学", description: "墨消し・和の趣" },
 ];
 
 export default function SpoilerEditor() {
@@ -161,7 +162,7 @@ export default function SpoilerEditor() {
 
   // テーマに応じたスタイル
   const getThemeStyles = (isRevealed: boolean, isAnimating: boolean) => {
-    const styles = {
+    const styles: Record<SpoilerTheme, { hidden: string; revealed: string; animation: string }> = {
       classic: {
         hidden: "bg-gray-800 text-gray-800",
         revealed: "bg-yellow-100 text-gray-900",
@@ -181,6 +182,11 @@ export default function SpoilerEditor() {
         hidden: "bg-gradient-to-t from-orange-600 via-red-500 to-yellow-400 text-transparent",
         revealed: "bg-orange-100 text-orange-900",
         animation: "animate-flame",
+      },
+      editorial: {
+        hidden: "bg-neutral-900 text-neutral-900 font-serif",
+        revealed: "bg-amber-50 text-neutral-800 font-serif border-b border-amber-700",
+        animation: "animate-editorial",
       },
     };
 

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 
-export type SpoilerTheme = "classic" | "glitch" | "mosaic" | "flame";
+export type SpoilerTheme = "classic" | "glitch" | "mosaic" | "flame" | "editorial";
 
 interface SpoilerViewerProps {
   content: string;
@@ -30,6 +30,11 @@ const themeStyles: Record<SpoilerTheme, { hidden: string; revealed: string; anim
     hidden: "bg-gradient-to-t from-orange-600 via-red-500 to-yellow-400 text-transparent",
     revealed: "bg-orange-100 text-orange-900",
     animation: "animate-flame",
+  },
+  editorial: {
+    hidden: "bg-neutral-900 text-neutral-900 font-serif",
+    revealed: "bg-amber-50 text-neutral-800 font-serif border-b border-amber-700",
+    animation: "animate-editorial",
   },
 };
 
