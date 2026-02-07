@@ -12,6 +12,7 @@ export default function SpoilerEditor() {
   const { data: session } = useSession();
   const [content, setContent] = useState("");
   const [spoilers, setSpoilers] = useState<SpoilerRange[]>([]);
+  const [revealedInPreview, setRevealedInPreview] = useState<Set<number>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -79,8 +80,22 @@ export default function SpoilerEditor() {
   // リセット
   const handleReset = useCallback(() => {
     setSpoilers([]);
+    setRevealedInPreview(new Set());
     setShareUrl(null);
     setCopied(false);
+  }, []);
+
+  // プレビューで伏字をクリックして解除
+  const togglePreviewSpoiler = useCallback((index: number) => {
+    setRevealedInPreview((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
   }, []);
 
   // 共有リンク作成
@@ -145,13 +160,26 @@ export default function SpoilerEditor() {
           </span>
         );
       }
+
+      const isRevealed = revealedInPreview.has(i);
+
       // 伏字部分
       parts.push(
         <span
           key={`spoiler-${i}`}
-          className="bg-gray-800 text-gray-800 hover:bg-gray-600 hover:text-white transition-colors cursor-pointer rounded px-0.5"
+          onClick={() => togglePreviewSpoiler(i)}
+          className={`
+            cursor-pointer rounded px-0.5 transition-all duration-200
+            ${
+              isRevealed
+                ? "bg-yellow-100 text-gray-900"
+                : "bg-gray-800 text-gray-800"
+            }
+          `}
         >
-          {content.slice(spoiler.start, spoiler.end)}
+          {isRevealed
+            ? content.slice(spoiler.start, spoiler.end)
+            : "█".repeat(Math.min(content.slice(spoiler.start, spoiler.end).length, 10))}
         </span>
       );
       lastEnd = spoiler.end;
@@ -217,7 +245,7 @@ export default function SpoilerEditor() {
       {/* プレビュー */}
       <div>
         <h3 className="text-sm font-medium text-gray-700 mb-2">
-          プレビュー（ホバーで伏字解除）
+          プレビュー（クリックで伏字解除）
         </h3>
         <div className="w-full min-h-[120px] p-3 bg-gray-50 rounded-lg border border-gray-200 text-gray-700 whitespace-pre-wrap">
           {renderPreview()}
