@@ -2,17 +2,27 @@
 
 import { useState, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import { SpoilerTheme } from "./SpoilerViewer";
 
 interface SpoilerRange {
   start: number;
   end: number;
 }
 
+const themeOptions: { value: SpoilerTheme; label: string; description: string }[] = [
+  { value: "classic", label: "クラシック", description: "シンプルな黒塗り" },
+  { value: "glitch", label: "グリッチ", description: "ノイズ風エフェクト" },
+  { value: "mosaic", label: "モザイク", description: "ぼかし効果" },
+  { value: "flame", label: "フレイム", description: "炎のような演出" },
+];
+
 export default function SpoilerEditor() {
   const { data: session } = useSession();
   const [content, setContent] = useState("");
   const [spoilers, setSpoilers] = useState<SpoilerRange[]>([]);
+  const [theme, setTheme] = useState<SpoilerTheme>("classic");
   const [revealedInPreview, setRevealedInPreview] = useState<Set<number>>(new Set());
+  const [animatingInPreview, setAnimatingInPreview] = useState<Set<number>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -26,12 +36,10 @@ export default function SpoilerEditor() {
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
 
-    if (start === end) return; // 選択なし
+    if (start === end) return;
 
-    // 重複チェックして追加
     setSpoilers((prev) => {
       const newSpoiler = { start, end };
-      // 既存の範囲と重複していたらマージ
       const merged = [...prev, newSpoiler].sort((a, b) => a.start - b.start);
       const result: SpoilerRange[] = [];
 
@@ -81,12 +89,17 @@ export default function SpoilerEditor() {
   const handleReset = useCallback(() => {
     setSpoilers([]);
     setRevealedInPreview(new Set());
+    setAnimatingInPreview(new Set());
     setShareUrl(null);
     setCopied(false);
   }, []);
 
   // プレビューで伏字をクリックして解除
   const togglePreviewSpoiler = useCallback((index: number) => {
+    if (animatingInPreview.has(index)) return;
+
+    setAnimatingInPreview((prev) => new Set(prev).add(index));
+
     setRevealedInPreview((prev) => {
       const next = new Set(prev);
       if (next.has(index)) {
@@ -96,7 +109,15 @@ export default function SpoilerEditor() {
       }
       return next;
     });
-  }, []);
+
+    setTimeout(() => {
+      setAnimatingInPreview((prev) => {
+        const next = new Set(prev);
+        next.delete(index);
+        return next;
+      });
+    }, 300);
+  }, [animatingInPreview]);
 
   // 共有リンク作成
   const handleShare = useCallback(async () => {
@@ -113,6 +134,7 @@ export default function SpoilerEditor() {
         body: JSON.stringify({
           content,
           spoilers: spoilers.map((s) => [s.start, s.end]),
+          theme,
         }),
       });
 
@@ -127,7 +149,7 @@ export default function SpoilerEditor() {
     } finally {
       setIsLoading(false);
     }
-  }, [content, spoilers]);
+  }, [content, spoilers, theme]);
 
   // URLコピー
   const handleCopy = useCallback(() => {
@@ -136,6 +158,35 @@ export default function SpoilerEditor() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }, [shareUrl]);
+
+  // テーマに応じたスタイル
+  const getThemeStyles = (isRevealed: boolean, isAnimating: boolean) => {
+    const styles = {
+      classic: {
+        hidden: "bg-gray-800 text-gray-800",
+        revealed: "bg-yellow-100 text-gray-900",
+        animation: "animate-fade-in",
+      },
+      glitch: {
+        hidden: "bg-red-900 text-red-900 animate-pulse",
+        revealed: "bg-red-100 text-red-900",
+        animation: "animate-glitch",
+      },
+      mosaic: {
+        hidden: "bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 text-transparent blur-sm",
+        revealed: "bg-purple-100 text-purple-900",
+        animation: "animate-unblur",
+      },
+      flame: {
+        hidden: "bg-gradient-to-t from-orange-600 via-red-500 to-yellow-400 text-transparent",
+        revealed: "bg-orange-100 text-orange-900",
+        animation: "animate-flame",
+      },
+    };
+
+    const s = styles[theme];
+    return `${isRevealed ? s.revealed : s.hidden} ${isAnimating && isRevealed ? s.animation : ""}`;
+  };
 
   // プレビュー用にテキストをレンダリング
   const renderPreview = () => {
@@ -152,7 +203,6 @@ export default function SpoilerEditor() {
     let lastEnd = 0;
 
     sortedSpoilers.forEach((spoiler, i) => {
-      // 伏字の前のテキスト
       if (spoiler.start > lastEnd) {
         parts.push(
           <span key={`text-${i}`}>
@@ -162,19 +212,16 @@ export default function SpoilerEditor() {
       }
 
       const isRevealed = revealedInPreview.has(i);
+      const isAnimating = animatingInPreview.has(i);
 
-      // 伏字部分
       parts.push(
         <span
           key={`spoiler-${i}`}
           onClick={() => togglePreviewSpoiler(i)}
           className={`
-            cursor-pointer rounded px-0.5 transition-all duration-200
-            ${
-              isRevealed
-                ? "bg-yellow-100 text-gray-900"
-                : "bg-gray-800 text-gray-800"
-            }
+            cursor-pointer rounded px-0.5 transition-all duration-300 inline-block
+            ${getThemeStyles(isRevealed, isAnimating)}
+            ${!isRevealed ? "hover:scale-105" : ""}
           `}
         >
           {isRevealed
@@ -185,7 +232,6 @@ export default function SpoilerEditor() {
       lastEnd = spoiler.end;
     });
 
-    // 最後のテキスト
     if (lastEnd < content.length) {
       parts.push(<span key="text-last">{content.slice(lastEnd)}</span>);
     }
@@ -240,6 +286,31 @@ export default function SpoilerEditor() {
         >
           リセット
         </button>
+      </div>
+
+      {/* テーマ選択 */}
+      <div>
+        <h3 className="text-sm font-medium text-gray-700 mb-2">
+          伏字スタイル
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {themeOptions.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setTheme(option.value)}
+              className={`
+                p-3 rounded-lg border-2 transition-all text-left
+                ${theme === option.value
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-200 hover:border-gray-300"
+                }
+              `}
+            >
+              <div className="font-medium text-sm text-gray-900">{option.label}</div>
+              <div className="text-xs text-gray-500">{option.description}</div>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* プレビュー */}

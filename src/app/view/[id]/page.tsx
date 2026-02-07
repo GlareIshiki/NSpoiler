@@ -45,7 +45,11 @@ export default async function ViewPage({ params }: PageProps) {
 
         {/* ビューワー */}
         <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <SpoilerViewer content={doc.content} spoilers={doc.spoilers} />
+          <SpoilerViewer
+            content={doc.content}
+            spoilers={doc.spoilers}
+            theme={doc.theme || "classic"}
+          />
         </section>
 
         {/* フッター */}
@@ -72,11 +76,13 @@ export async function generateMetadata({ params }: PageProps) {
       title: "ネタバレ注意！ - NSpoiler",
       description: "この投稿にはネタバレが含まれています。",
       url: `/view/${id}`,
+      images: [`/api/og/${id}`],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: "ネタバレ注意！ - NSpoiler",
       description: "この投稿にはネタバレが含まれています。",
+      images: [`/api/og/${id}`],
     },
   };
 }
