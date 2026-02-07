@@ -12,17 +12,96 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ============================
+   デフォルトテーマ
+   ============================ */
+body.theme-default {
+  --background: #f9fafb;
+  --foreground: #171717;
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+  --header-bg: #ffffff;
+  --header-border: #e5e7eb;
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+}
+
+/* ============================
+   編集工学テーマ
+   ============================ */
+body.theme-editorial {
+  --background: #0a0a0a;
+  --foreground: #e8e4d9;
+  --card-bg: #171411;
+  --card-border: #2a2520;
+  --header-bg: #0f0d0a;
+  --header-border: #2a2520;
+  --input-bg: #1a1815;
+  --input-border: #3a3530;
+  --muted: #8a8578;
+  --accent: #c9a86c;
+  --accent-hover: #d4b87a;
+
+  font-family: "Noto Serif JP", "Yu Mincho", "Hiragino Mincho ProN", serif;
+}
+
+/* 編集工学テーマのカード */
+body.theme-editorial .card {
+  background: linear-gradient(145deg, #171411 0%, #1a1614 100%);
+  border: 1px solid #2a2520;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* 編集工学テーマの装飾 */
+body.theme-editorial .card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #c9a86c, transparent);
+  opacity: 0.6;
+}
+
+/* 編集工学テーマのボタン */
+body.theme-editorial .btn-primary {
+  background: linear-gradient(135deg, #2a2520 0%, #1a1815 100%);
+  border: 1px solid #c9a86c;
+  color: #c9a86c;
+}
+
+body.theme-editorial .btn-primary:hover {
+  background: linear-gradient(135deg, #3a3530 0%, #2a2520 100%);
+  box-shadow: 0 0 15px rgba(201, 168, 108, 0.3);
+}
+
+/* 編集工学テーマのテキストエリア */
+body.theme-editorial textarea,
+body.theme-editorial input[type="text"] {
+  background: #1a1815;
+  border: 1px solid #3a3530;
+  color: #e8e4d9;
+}
+
+body.theme-editorial textarea::placeholder {
+  color: #5a5550;
+}
+
+body.theme-editorial textarea:focus,
+body.theme-editorial input[type="text"]:focus {
+  border-color: #c9a86c;
+  box-shadow: 0 0 0 2px rgba(201, 168, 108, 0.2);
 }
 
 /* 伏字解除アニメーション */

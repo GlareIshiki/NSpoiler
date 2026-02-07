@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { SpoilerTheme } from "./SpoilerViewer";
+import { useSiteTheme } from "@/contexts/ThemeContext";
 
 interface SpoilerRange {
   start: number;
@@ -19,6 +20,8 @@ const themeOptions: { value: SpoilerTheme; label: string; description: string }[
 
 export default function SpoilerEditor() {
   const { data: session } = useSession();
+  const { siteTheme } = useSiteTheme();
+  const isEditorial = siteTheme === "editorial";
   const [content, setContent] = useState("");
   const [spoilers, setSpoilers] = useState<SpoilerRange[]>([]);
   const [theme, setTheme] = useState<SpoilerTheme>("classic");
@@ -198,8 +201,8 @@ export default function SpoilerEditor() {
   const renderPreview = () => {
     if (!content) {
       return (
-        <p className="text-gray-400 text-sm">
-          伏字化されたテキストがここに表示されます
+        <p className={`text-sm ${isEditorial ? "text-[#5a5550]" : "text-gray-400"}`}>
+          {isEditorial ? "墨入れされた文章がここに現れます" : "伏字化されたテキストがここに表示されます"}
         </p>
       );
     }
@@ -251,9 +254,11 @@ export default function SpoilerEditor() {
       <div>
         <label
           htmlFor="content"
-          className="block text-sm font-medium text-gray-700 mb-2"
+          className={`block text-sm font-medium mb-2 ${
+            isEditorial ? "text-[#c9a86c]" : "text-gray-700"
+          }`}
         >
-          テキストを入力
+          {isEditorial ? "文章を記す" : "テキストを入力"}
         </label>
         <textarea
           ref={textareaRef}
@@ -264,42 +269,58 @@ export default function SpoilerEditor() {
             setSpoilers([]);
             setShareUrl(null);
           }}
-          className="w-full h-48 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400"
-          placeholder="ネタバレを含むテキストを入力してください..."
+          className={`w-full h-48 p-3 rounded-lg resize-none transition-colors ${
+            isEditorial
+              ? "bg-[#1a1815] border border-[#3a3530] text-[#e8e4d9] placeholder-[#5a5550] focus:border-[#c9a86c] focus:ring-2 focus:ring-[#c9a86c]/20"
+              : "border border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          }`}
+          placeholder={isEditorial ? "秘匿すべき物語をここに..." : "ネタバレを含むテキストを入力してください..."}
         />
       </div>
 
       {/* ツールバー */}
-      <div className="flex flex-wrap gap-2 pb-4 border-b border-gray-200">
+      <div className={`flex flex-wrap gap-2 pb-4 border-b ${isEditorial ? "border-[#2a2520]" : "border-gray-200"}`}>
         <button
           onClick={handleManualSpoiler}
           disabled={!content}
-          className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed ${
+            isEditorial
+              ? "bg-[#2a2520] text-[#c9a86c] border border-[#c9a86c] hover:bg-[#3a3530]"
+              : "bg-gray-900 text-white hover:bg-gray-800"
+          }`}
         >
-          選択範囲を伏字に
+          {isEditorial ? "選択範囲に墨を入れる" : "選択範囲を伏字に"}
         </button>
         <button
           onClick={handleRandomSpoiler}
           disabled={!content || isLoading}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed ${
+            isEditorial
+              ? "bg-[#c9a86c] text-[#0a0a0a] hover:bg-[#d4b87a]"
+              : "bg-blue-600 text-white hover:bg-blue-700"
+          }`}
         >
-          {isLoading ? "処理中..." : "ランダム伏字化"}
+          {isLoading ? "処理中..." : isEditorial ? "自動墨入れ" : "ランダム伏字化"}
         </button>
         <button
           onClick={handleReset}
           disabled={spoilers.length === 0}
-          className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed ${
+            isEditorial
+              ? "bg-transparent border border-[#3a3530] text-[#8a8578] hover:border-[#5a5550]"
+              : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+          }`}
         >
-          リセット
+          {isEditorial ? "白紙に戻す" : "リセット"}
         </button>
       </div>
 
       {/* テーマ選択 */}
       <div>
-        <h3 className="text-sm font-medium text-gray-700 mb-2">
-          伏字スタイル
+        <h3 className={`text-sm font-medium mb-2 ${isEditorial ? "text-[#c9a86c]" : "text-gray-700"}`}>
+          {isEditorial ? "墨の意匠" : "伏字スタイル"}
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
           {themeOptions.map((option) => (
             <button
               key={option.value}
@@ -307,13 +328,21 @@ export default function SpoilerEditor() {
               className={`
                 p-3 rounded-lg border-2 transition-all text-left
                 ${theme === option.value
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200 hover:border-gray-300"
+                  ? isEditorial
+                    ? "border-[#c9a86c] bg-[#c9a86c]/10"
+                    : "border-blue-500 bg-blue-50"
+                  : isEditorial
+                    ? "border-[#2a2520] hover:border-[#3a3530]"
+                    : "border-gray-200 hover:border-gray-300"
                 }
               `}
             >
-              <div className="font-medium text-sm text-gray-900">{option.label}</div>
-              <div className="text-xs text-gray-500">{option.description}</div>
+              <div className={`font-medium text-sm ${isEditorial ? "text-[#e8e4d9]" : "text-gray-900"}`}>
+                {option.label}
+              </div>
+              <div className={`text-xs ${isEditorial ? "text-[#8a8578]" : "text-gray-500"}`}>
+                {option.description}
+              </div>
             </button>
           ))}
         </div>
@@ -321,10 +350,16 @@ export default function SpoilerEditor() {
 
       {/* プレビュー */}
       <div>
-        <h3 className="text-sm font-medium text-gray-700 mb-2">
-          プレビュー（クリックで伏字解除）
+        <h3 className={`text-sm font-medium mb-2 ${isEditorial ? "text-[#c9a86c]" : "text-gray-700"}`}>
+          {isEditorial ? "仕上がり（触れて開封）" : "プレビュー（クリックで伏字解除）"}
         </h3>
-        <div className="w-full min-h-[120px] p-3 bg-gray-50 rounded-lg border border-gray-200 text-gray-700 whitespace-pre-wrap">
+        <div
+          className={`w-full min-h-[120px] p-3 rounded-lg whitespace-pre-wrap ${
+            isEditorial
+              ? "bg-[#1a1815] border border-[#2a2520] text-[#e8e4d9]"
+              : "bg-gray-50 border border-gray-200 text-gray-700"
+          }`}
+        >
           {renderPreview()}
         </div>
       </div>
@@ -337,9 +372,13 @@ export default function SpoilerEditor() {
               <button
                 onClick={handleShare}
                 disabled={spoilers.length === 0 || isLoading}
-                className="w-full px-4 py-3 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isEditorial
+                    ? "bg-[#c9a86c] text-[#0a0a0a] hover:bg-[#d4b87a]"
+                    : "bg-green-600 text-white hover:bg-green-700"
+                }`}
               >
-                {isLoading ? "作成中..." : "共有リンクを作成"}
+                {isLoading ? "作成中..." : isEditorial ? "共有の符を発行" : "共有リンクを作成"}
               </button>
             ) : (
               <div className="space-y-2">
@@ -348,11 +387,19 @@ export default function SpoilerEditor() {
                     type="text"
                     value={shareUrl}
                     readOnly
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-gray-50"
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm ${
+                      isEditorial
+                        ? "bg-[#1a1815] border border-[#3a3530] text-[#e8e4d9]"
+                        : "border border-gray-300 text-gray-700 bg-gray-50"
+                    }`}
                   />
                   <button
                     onClick={handleCopy}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors min-h-[44px]"
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
+                      isEditorial
+                        ? "bg-[#c9a86c] text-[#0a0a0a] hover:bg-[#d4b87a]"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+                    }`}
                   >
                     {copied ? "コピー済み!" : "コピー"}
                   </button>
@@ -362,7 +409,11 @@ export default function SpoilerEditor() {
                     href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent("ネタバレ注意！")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium text-center hover:bg-gray-800 transition-colors min-h-[44px]"
+                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium text-center transition-colors min-h-[44px] ${
+                      isEditorial
+                        ? "bg-[#1a1815] border border-[#3a3530] text-[#e8e4d9] hover:bg-[#2a2520]"
+                        : "bg-black text-white hover:bg-gray-800"
+                    }`}
                   >
                     Xでシェア
                   </a>
@@ -370,7 +421,11 @@ export default function SpoilerEditor() {
                     href={`https://line.me/R/msg/text/?${encodeURIComponent("ネタバレ注意！ " + shareUrl)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium text-center hover:bg-green-600 transition-colors min-h-[44px]"
+                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium text-center transition-colors min-h-[44px] ${
+                      isEditorial
+                        ? "bg-[#2a4a2a] border border-[#3a6a3a] text-[#8fbc8f] hover:bg-[#3a5a3a]"
+                        : "bg-green-500 text-white hover:bg-green-600"
+                    }`}
                   >
                     LINEでシェア
                   </a>
@@ -379,8 +434,8 @@ export default function SpoilerEditor() {
             )}
           </>
         ) : (
-          <p className="text-sm text-gray-500 text-center py-3">
-            共有リンクを作成するにはログインしてください
+          <p className={`text-sm text-center py-3 ${isEditorial ? "text-[#8a8578]" : "text-gray-500"}`}>
+            {isEditorial ? "共有には認証が必要です" : "共有リンクを作成するにはログインしてください"}
           </p>
         )}
       </div>

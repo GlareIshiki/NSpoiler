@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
+import { useSiteTheme } from "@/contexts/ThemeContext";
 
 interface SpoilerSummary {
   id: string;
@@ -15,6 +16,8 @@ interface SpoilerSummary {
 
 export default function MyPage() {
   const { data: session, status } = useSession();
+  const { siteTheme } = useSiteTheme();
+  const isEditorial = siteTheme === "editorial";
   const [spoilers, setSpoilers] = useState<SpoilerSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -79,13 +82,13 @@ export default function MyPage() {
 
   if (status === "loading" || isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className={`min-h-screen ${isEditorial ? "bg-[#0a0a0a]" : "bg-gray-50"}`}>
         <Header />
         <main className="max-w-4xl mx-auto px-4 py-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-32" />
-            <div className="h-24 bg-gray-200 rounded" />
-            <div className="h-24 bg-gray-200 rounded" />
+            <div className={`h-8 rounded w-32 ${isEditorial ? "bg-[#2a2520]" : "bg-gray-200"}`} />
+            <div className={`h-24 rounded ${isEditorial ? "bg-[#2a2520]" : "bg-gray-200"}`} />
+            <div className={`h-24 rounded ${isEditorial ? "bg-[#2a2520]" : "bg-gray-200"}`} />
           </div>
         </main>
       </div>
@@ -94,21 +97,25 @@ export default function MyPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className={`min-h-screen ${isEditorial ? "bg-[#0a0a0a]" : "bg-gray-50"}`}>
         <Header />
         <main className="max-w-4xl mx-auto px-4 py-6">
           <div className="text-center py-12">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              ログインが必要です
+            <h2 className={`text-xl font-bold mb-4 ${isEditorial ? "text-[#e8e4d9]" : "text-gray-900"}`}>
+              {isEditorial ? "認証が必要です" : "ログインが必要です"}
             </h2>
-            <p className="text-gray-600 mb-6">
-              マイページを表示するにはログインしてください
+            <p className={`mb-6 ${isEditorial ? "text-[#8a8578]" : "text-gray-600"}`}>
+              {isEditorial ? "この頁を閲覧するには認証をお願いします" : "マイページを表示するにはログインしてください"}
             </p>
             <Link
               href="/"
-              className="inline-block px-6 py-3 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+              className={`inline-block px-6 py-3 rounded-lg text-sm font-medium transition-colors ${
+                isEditorial
+                  ? "bg-[#c9a86c] text-[#0a0a0a] hover:bg-[#d4b87a]"
+                  : "bg-gray-900 text-white hover:bg-gray-800"
+              }`}
             >
-              トップページへ
+              {isEditorial ? "表紙へ戻る" : "トップページへ"}
             </Link>
           </div>
         </main>
@@ -117,28 +124,45 @@ export default function MyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen ${isEditorial ? "bg-[#0a0a0a]" : "bg-gray-50"}`}>
       <Header />
 
       <main className="max-w-4xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">マイページ</h2>
+          <h2 className={`text-2xl font-bold ${isEditorial ? "text-[#e8e4d9]" : "text-gray-900"}`}>
+            {isEditorial ? "記録帳" : "マイページ"}
+          </h2>
           <Link
             href="/"
-            className="text-sm text-blue-600 hover:text-blue-800"
+            className={`text-sm ${isEditorial ? "text-[#c9a86c] hover:text-[#d4b87a]" : "text-blue-600 hover:text-blue-800"}`}
           >
-            新規作成 →
+            {isEditorial ? "新たに記す →" : "新規作成 →"}
           </Link>
         </div>
 
         {spoilers.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-            <p className="text-gray-600 mb-4">まだ投稿がありません</p>
+          <div
+            className={`rounded-lg p-8 text-center relative overflow-hidden ${
+              isEditorial
+                ? "bg-[#171411] border border-[#2a2520] shadow-xl"
+                : "bg-white shadow-sm border border-gray-200"
+            }`}
+          >
+            {isEditorial && (
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#c9a86c] to-transparent opacity-60" />
+            )}
+            <p className={`mb-4 ${isEditorial ? "text-[#8a8578]" : "text-gray-600"}`}>
+              {isEditorial ? "まだ何も記されていません" : "まだ投稿がありません"}
+            </p>
             <Link
               href="/"
-              className="inline-block px-6 py-3 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+              className={`inline-block px-6 py-3 rounded-lg text-sm font-medium transition-colors ${
+                isEditorial
+                  ? "bg-[#c9a86c] text-[#0a0a0a] hover:bg-[#d4b87a]"
+                  : "bg-gray-900 text-white hover:bg-gray-800"
+              }`}
             >
-              最初の投稿を作成
+              {isEditorial ? "最初の一頁を記す" : "最初の投稿を作成"}
             </Link>
           </div>
         ) : (
@@ -146,14 +170,21 @@ export default function MyPage() {
             {spoilers.map((spoiler) => (
               <div
                 key={spoiler.id}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-4"
+                className={`rounded-lg p-4 relative overflow-hidden ${
+                  isEditorial
+                    ? "bg-[#171411] border border-[#2a2520] shadow-xl"
+                    : "bg-white shadow-sm border border-gray-200"
+                }`}
               >
+                {isEditorial && (
+                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#c9a86c] to-transparent opacity-60" />
+                )}
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex-1 min-w-0">
-                    <p className="text-gray-700 whitespace-pre-wrap break-words line-clamp-3">
+                    <p className={`whitespace-pre-wrap break-words line-clamp-3 ${isEditorial ? "text-[#e8e4d9]" : "text-gray-700"}`}>
                       {spoiler.content}
                     </p>
-                    <div className="flex items-center gap-3 mt-3 text-sm text-gray-500">
+                    <div className={`flex items-center gap-3 mt-3 text-sm ${isEditorial ? "text-[#8a8578]" : "text-gray-500"}`}>
                       <span>🔒 {spoiler.spoilerCount}箇所</span>
                       <span>•</span>
                       <span>{formatDate(spoiler.createdAt)}</span>
@@ -161,25 +192,37 @@ export default function MyPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100">
+                <div className={`flex flex-wrap gap-2 mt-4 pt-4 border-t ${isEditorial ? "border-[#2a2520]" : "border-gray-100"}`}>
                   <Link
                     href={`/view/${spoiler.id}`}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      isEditorial
+                        ? "bg-[#c9a86c] text-[#0a0a0a] hover:bg-[#d4b87a]"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+                    }`}
                   >
-                    表示
+                    {isEditorial ? "閲覧" : "表示"}
                   </Link>
                   <button
                     onClick={() => handleCopy(spoiler.id)}
-                    className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      isEditorial
+                        ? "bg-transparent border border-[#3a3530] text-[#8a8578] hover:border-[#5a5550]"
+                        : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
                   >
-                    リンクをコピー
+                    {isEditorial ? "符をコピー" : "リンクをコピー"}
                   </button>
                   <button
                     onClick={() => handleDelete(spoiler.id)}
                     disabled={deletingId === spoiler.id}
-                    className="px-4 py-2 bg-white border border-red-300 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors disabled:opacity-50"
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
+                      isEditorial
+                        ? "bg-transparent border border-[#5a3030] text-[#c97070] hover:border-[#7a4040]"
+                        : "bg-white border border-red-300 text-red-600 hover:bg-red-50"
+                    }`}
                   >
-                    {deletingId === spoiler.id ? "削除中..." : "削除"}
+                    {deletingId === spoiler.id ? "削除中..." : isEditorial ? "抹消" : "削除"}
                   </button>
                 </div>
               </div>
@@ -187,8 +230,8 @@ export default function MyPage() {
           </div>
         )}
 
-        <p className="text-sm text-gray-500 text-center mt-8">
-          投稿は30日後に自動的に削除されます
+        <p className={`text-sm text-center mt-8 ${isEditorial ? "text-[#5a5550]" : "text-gray-500"}`}>
+          {isEditorial ? "記録は三十日後に自ずと消えます" : "投稿は30日後に自動的に削除されます"}
         </p>
       </main>
     </div>
